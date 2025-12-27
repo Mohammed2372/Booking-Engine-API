@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import Model
+from django.db.models import Model, TextChoices
 
 from django.contrib.postgres.fields import ArrayField
 
@@ -16,18 +16,29 @@ class Property(Model):
 
 
 class RoomType(Model):
-    class ViewType(models.TextChoices):
+    class ViewType(TextChoices):
         CITY = "CITY", "City View"
         SEA = "SEA", "Sea View"
         GARDEN = "GARDEN", "Garden View"
         POOL = "POOL", "Pool View"
 
+    class RoomKind(TextChoices):
+        SINGLE = "SINGLE", "Single Room"
+        DOUBLE = "DOUBLE", "Double Room"
+        TWIN = "TWIN", "Twin Room"
+        STUDIO = "STUDIO", "Studio"
+        DELUXE = "DELUXE", "Deluxe Suite"
+        FAMILY = "FAMILY", "Family Suite"
+        PRESIDENTIAL = "PRESIDENTIAL", "Presidential Suite"
+
     property = models.ForeignKey(
         Property, on_delete=models.CASCADE, related_name="room_types"
     )
-    name = models.CharField(max_length=255)
+    name = models.CharField(
+        max_length=50, choices=RoomKind.choices, default=RoomKind.SINGLE
+    )
     base_price = models.DecimalField(max_digits=10, decimal_places=2)
-    capacity = models.PositiveIntegerField()
+    capacity = models.PositiveIntegerField(help_text='Max people allowed')
     view_type = models.CharField(
         max_length=20, choices=ViewType.choices, default=ViewType.CITY
     )
