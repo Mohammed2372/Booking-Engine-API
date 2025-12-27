@@ -6,7 +6,6 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
 
-from bookings.filters import RoomTypeFilter
 
 from .services import find_available_room_types, create_booking
 from .serializers import (
@@ -14,6 +13,8 @@ from .serializers import (
     BookingDetailSerializer,
     RoomTypeSerializer,
 )
+from .filters import RoomTypeFilter
+from inventory.models import RoomType
 
 
 # Create your views here.
@@ -44,7 +45,15 @@ class RoomSearchAPIView(APIView):
                 name="view_type",
                 required=False,
                 type=str,
-                enum=["CITY", "SEA", "GARDEN", "POOL"],
+                enum=[c[0] for c in RoomType.ViewType.choices],
+                description="Filter by View Type",
+            ),
+            OpenApiParameter(
+                name="name",
+                description="Room King (e.g. DELUXE, SINGLE)",
+                required=True,
+                type=str,
+                enum=[c[0] for c in RoomType.RoomKind.choices],
             ),
         ],
         responses=RoomTypeSerializer(many=True),
