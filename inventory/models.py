@@ -1,6 +1,6 @@
 from django.db import models
 from django.db.models import Model, TextChoices
-
+from autoslug import AutoSlugField
 from django.contrib.postgres.fields import ArrayField
 
 
@@ -49,6 +49,7 @@ class RoomType(Model):
         blank=True,
         default=list,
     )
+    slug = AutoSlugField(populate_from="name", unique=True, always_update=True)
 
     def __str__(self) -> str:
         return f"{self.name} at {self.property.name}"
@@ -62,6 +63,20 @@ class Room(Model):
 
     def __str__(self):
         return f"room number: {self.number}, name: {self.room_type.name}"
+
+
+class RoomImage(Model):
+    room_type = models.ForeignKey(
+        RoomType, on_delete=models.CASCADE, related_name="images"
+    )
+    image = models.ImageField(upload_to="room_images/")
+    is_cover = models.BooleanField(
+        default=False, help_text="Is this the main image shown in search?"
+    )
+    caption = models.CharField(max_length=100, blank=True)
+
+    def __str__(self):
+        return f"Image for {self.room_type.name}"
 
 
 class PricingRule(Model):

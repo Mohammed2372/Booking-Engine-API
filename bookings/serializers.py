@@ -2,7 +2,13 @@ from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer, Serializer
 
 from .models import Booking
-from inventory.models import RoomType
+from inventory.models import RoomType, RoomImage
+
+
+class RoomImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RoomImage
+        fields = ["image", "is_cover", "caption"]
 
 
 class RoomTypeSerializer(ModelSerializer):
@@ -13,6 +19,7 @@ class RoomTypeSerializer(ModelSerializer):
         model = RoomType
         fields = [
             "id",
+            "slug",
             "hotel_name",
             "city",
             "name",
@@ -22,6 +29,7 @@ class RoomTypeSerializer(ModelSerializer):
             "view_type",
             "amenities",
             "is_smoking",
+            "images",
         ]
 
 
