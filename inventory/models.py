@@ -38,7 +38,7 @@ class RoomType(Model):
         max_length=50, choices=RoomKind.choices, default=RoomKind.SINGLE
     )
     base_price = models.DecimalField(max_digits=10, decimal_places=2)
-    capacity = models.PositiveIntegerField(help_text='Max people allowed')
+    capacity = models.PositiveIntegerField(help_text="Max people allowed")
     view_type = models.CharField(
         max_length=20, choices=ViewType.choices, default=ViewType.CITY
     )
@@ -62,3 +62,31 @@ class Room(Model):
 
     def __str__(self):
         return f"room number: {self.number}, name: {self.room_type.name}"
+
+
+class PricingRule(Model):
+    name = models.CharField(max_length=100)
+    room_type = models.ForeignKey(
+        RoomType,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="priding_rules",
+    )
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
+    days_of_week = ArrayField(
+        models.PositiveIntegerField(),
+        null=True,
+        blank=True,
+        help_text="0=Monday, 6=Sunday",
+    )
+    price_multiplier = models.DecimalField(
+        max_digits=4,
+        decimal_places=2,
+        default=1.00,
+        help_text="Standard, 1.2 = +20%, 0.8 = -20%",
+    )
+
+    def __str__(self):
+        return f"{self.name} (x{self.price_multiplier})"

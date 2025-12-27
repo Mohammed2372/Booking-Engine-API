@@ -7,7 +7,7 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
 
 
-from .services import find_available_room_types, create_booking
+from .services import calculate_total_price, find_available_room_types, create_booking
 from .serializers import (
     BookingCreateSerializer,
     BookingDetailSerializer,
@@ -69,18 +69,32 @@ class RoomSearchAPIView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        check_in_date = parse_date(check_in)
+        check_out_date = parse_date(check_out)
+        
         # find room types
         available_types = find_available_room_types(
-            parse_date(check_in), parse_date(check_out)
+            parse_date(check_in_date), parse_date(check_out_date)
         )
 
+        # filter
         filterset = RoomTypeFilter(request.GET, queryset=available_types)
 
         if not filterset.is_valid():
             return Response(filterset.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        serializer = RoomTypeSerializer(filterset.qs, many=True)
-        return Response(serializer.data)
+        # calculate total price for each result
+        results = []
+        for room_type in filterset.qs:
+            total = calculate_total_price(room_type, check_in_date, check_out_date)
+            
+            # convert model to dictionary
+            data = RoomTypeSerializer(filterset.qs).data
+            # inject new field in the model
+            data['total_price_for_stay'] = total
+            results.append(data)
+            
+        return Response(results)
 
 
 class BookingCreateAPIView(APIView):

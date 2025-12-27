@@ -2,9 +2,9 @@ from django.db import transaction
 from django.db.models import Q
 from django.core.exceptions import ValidationError
 from psycopg2.extras import DateRange
-from datetime import date
+from datetime import date, timedelta
 
-from inventory.models import Room, RoomType
+from inventory.models import PricingRule, Room, RoomType
 from bookings.models import Booking
 
 # TODO: Availability search -> find a room type ('deluxe') that has at least one physical room free
@@ -45,11 +45,63 @@ def create_booking(user, room_type_id, check_in: date, check_out: date):
         if not available_room:
             raise ValidationError('No rooms available for these dates')
 
+        final_price = calculate_total_price(
+            available_room.room_type,
+            check_in,
+            check_out,
+        )
+        
         booking = Booking.objects.create(
             user=user,
             room=available_room,
             stay_range=search_range,
             status=Booking.Status.PENDING,
+            total_price=final_price,
         )
 
         return booking
+    
+
+def calculate_total_price(room_type, check_in: date, check_out: date):
+    """
+    Iterates through each day of the stay.
+    Checks if any pricing rule applies to that specific day.
+    Return the SUM of all daily prices.
+    """
+    
+    total_price = 0.0
+    current_date = check_in
+    
+    # get all rules for this room type
+    rules = PricingRule.objects.filter(
+        Q(room_type=room_type) | Q(room_type__isnull=True)
+    )
+    
+    # loop through every single night
+    while current_date < check_out:
+        daily_price = float(room_type.base_price)
+        multiplier = 1.0
+        
+        for rule in rules:
+            # check if the date within the rule's range
+            date_match = True
+            if rule.start_date and rule.end_date:
+                if not (rule.start_date <= current_date <= rule.end_date):
+                    date_match = False
+            
+            # check if the day of week correct
+            day_match = True
+            if rule.days_of_week:
+                if current_date.weekday() not in rule.days_of_week:
+                    day_match = False
+            
+            # if both match, apply the math
+            if date_match and day_match:
+                multiplier *= float(rule.price_multiplier)
+        
+        # add this day's cost to total
+        total_price += (daily_price * multiplier)
+        
+        # move to next day
+        current_date += timedelta(days=1)
+    return round(total_price, 2)

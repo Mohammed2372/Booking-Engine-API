@@ -17,6 +17,7 @@ class RoomTypeSerializer(ModelSerializer):
             "city",
             "name",
             "base_price",
+            "total_price_for_stay",
             "capacity",
             "view_type",
             "amenities",
