@@ -1,7 +1,9 @@
 from django.db import models
-from django.db.models import Model, TextChoices
+from django.db.models import Model, TextChoices, Avg
 from autoslug import AutoSlugField
 from django.contrib.postgres.fields import ArrayField
+
+import builtins
 
 
 # Create your models here.
@@ -53,6 +55,23 @@ class RoomType(Model):
 
     def __str__(self) -> str:
         return f"{self.name} at {self.property.name}"
+
+    @builtins.property
+    def average_rating(self):
+        # find all rooms of this type
+        # find all bookings for those rooms
+        # find all reviews for those bookings
+        # calculate average
+
+        avg = self.rooms.aggregate(avg_score=Avg("booking__review__rating"))[
+            "avg_score"
+        ]
+
+        return round(avg, 1) if avg else 0.0
+
+    @builtins.property
+    def review_count(self):
+        return self.rooms.filter(bookings__review__isnull=False).count()
 
 
 class Room(Model):

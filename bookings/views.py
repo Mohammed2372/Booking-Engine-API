@@ -8,9 +8,11 @@ from drf_spectacular.types import OpenApiTypes
 
 
 from .services import calculate_total_price, find_available_room_types, create_booking
+from .models import Booking, Review
 from .serializers import (
     BookingCreateSerializer,
     BookingDetailSerializer,
+    ReviewCreateSerializer,
     RoomTypeSerializer,
 )
 from .filters import RoomTypeFilter
@@ -71,7 +73,7 @@ class RoomSearchAPIView(APIView):
 
         check_in_date = parse_date(check_in)
         check_out_date = parse_date(check_out)
-        
+
         # find room types
         available_types = find_available_room_types(
             parse_date(check_in_date), parse_date(check_out_date)
@@ -87,13 +89,13 @@ class RoomSearchAPIView(APIView):
         results = []
         for room_type in filterset.qs:
             total = calculate_total_price(room_type, check_in_date, check_out_date)
-            
+
             # convert model to dictionary
             data = RoomTypeSerializer(filterset.qs).data
             # inject new field in the model
-            data['total_price_for_stay'] = total
+            data["total_price_for_stay"] = total
             results.append(data)
-            
+
         return Response(results)
 
 
@@ -126,5 +128,42 @@ class BookingCreateAPIView(APIView):
                 )
             except Exception as e:
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ReviewCreateAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        request=ReviewCreateSerializer,
+        responses={201: "Review Created"},
+        description="Submit a review for a specific booking ID.",
+    )
+    def post(self, request):
+        serializer = ReviewCreateSerializer(
+            data=request.data, context={"request": request}
+        )
+        if serializer.is_valid():
+            booking = Booking.objects.get(id=serializer.validated_data["booking_id"])
+
+            try:
+                review = Review.objects.create(
+                    booking=booking,
+                    rating=serializer.validated_data["rating"],
+                    comment=serializer.validate_data.get("comment", ""),
+                )
+                return Response(
+                    {
+                        "message": "Review submitted!",
+                        "review": ReviewCreateSerializer(review),
+                    },
+                    status=status.HTTP_201_CREATED,
+                )
+            except Exception as e:
+                return Response(
+                    {"error": "You have already reviewed this booking."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

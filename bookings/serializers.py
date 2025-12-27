@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer, Serializer
 
-from .models import Booking
+from .models import Booking, Review
 from inventory.models import RoomType, RoomImage
 
 
@@ -14,6 +14,8 @@ class RoomImageSerializer(serializers.ModelSerializer):
 class RoomTypeSerializer(ModelSerializer):
     hotel_name = serializers.CharField(source="property.name", read_only=True)
     city = serializers.CharField(source="property.city", read_only=True)
+    average_rating = serializers.FloatField(read_only=True)
+    review_count = serializers.FloatField(read_only=True)
 
     class Meta:
         model = RoomType
@@ -24,12 +26,13 @@ class RoomTypeSerializer(ModelSerializer):
             "city",
             "name",
             "base_price",
-            "total_price_for_stay",
             "capacity",
             "view_type",
             "amenities",
             "is_smoking",
             "images",
+            "average_rating",
+            "review_count",
         ]
 
 
@@ -71,3 +74,27 @@ class BookingDetailSerializer(ModelSerializer):
 
     def get_check_out(self, obj):
         return obj.stay_range.upper if obj.stay_range else None
+
+
+class ReviewCreateSerializer(ModelSerializer):
+    booking_id = serializers.IntegerField(write_only=True)
+
+    class Meta:
+        model = Review
+        fields = ["booking_id", "rating", "comment", "created_at"]
+        read_only_fields = ["created_at"]
+
+    def validate_booking_id(self, value):
+        user = self.context["request"].user
+
+        # check if the booking exists and belong to this user
+        try:
+            booking = Booking.objects.get(id=value, user=user)
+        except Booking.DoesNotExist:
+            raise serializers.ValidationError("Invalid booking ID.")
+
+        # check if booking is complete only, can't review without booking
+        # TODO: make it check if not completed only
+        if booking.status != Booking.Status.CANCELLED:
+            raise serializers.ValidationError("You can only review completed stays.")
+        return value
