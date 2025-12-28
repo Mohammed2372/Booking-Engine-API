@@ -58,12 +58,10 @@ class RoomType(Model):
 
     @builtins.property
     def average_rating(self):
-        # find all rooms of this type
-        # find all bookings for those rooms
-        # find all reviews for those bookings
-        # calculate average
+        # Joins Room -> Booking -> Review -> Calculates Average
+        # Returns None if no reviews exist
 
-        avg = self.rooms.aggregate(avg_score=Avg("booking__review__rating"))[
+        avg = self.rooms.aggregate(avg_score=Avg("bookings__review__rating"))[
             "avg_score"
         ]
 

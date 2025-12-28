@@ -80,9 +80,7 @@ class RoomSearchAPIView(APIView):
         check_out_date = parse_date(check_out)
 
         # find room types
-        available_types = find_available_room_types(
-            parse_date(check_in_date), parse_date(check_out_date)
-        )
+        available_types = find_available_room_types(check_in_date, check_out_date)
 
         # filter
         filterset = RoomTypeFilter(request.GET, queryset=available_types)
@@ -101,7 +99,7 @@ class RoomSearchAPIView(APIView):
             )
 
             # convert model to dictionary
-            data = RoomTypeSerializer(filterset.qs).data
+            data = RoomTypeSerializer(room_type).data
             # inject new field in the model
             data["total_price_for_stay"] = total_price
             results.append(data)
@@ -183,9 +181,6 @@ class ReviewCreateAPIView(APIView):
                     status=status.HTTP_201_CREATED,
                 )
             except Exception as e:
-                return Response(
-                    {"error": "You have already reviewed this booking."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

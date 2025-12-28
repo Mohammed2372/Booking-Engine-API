@@ -35,6 +35,7 @@ class RoomTypeSerializer(ModelSerializer):
             "images",
             "average_rating",
             "review_count",
+            # NOTE: do not show the total room count of the room type to user
             "total_inventory",
             "rooms_left",
         ]
@@ -99,7 +100,7 @@ class ReviewCreateSerializer(ModelSerializer):
             raise serializers.ValidationError("Invalid booking ID.")
 
         # check if booking is complete only, can't review without booking
-        # TODO: make it check if not completed only
-        if booking.status != Booking.Status.CANCELLED:
+        # TODO: make it check if not completed only (!= Completed)
+        if booking.status == Booking.Status.CANCELLED:
             raise serializers.ValidationError("You can only review completed stays.")
         return value
