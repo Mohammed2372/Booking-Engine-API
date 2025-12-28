@@ -7,7 +7,12 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
 
 
-from .services import calculate_total_price, find_available_room_types, create_booking
+from .services import (
+    calculate_total_price,
+    find_available_room_types,
+    create_booking,
+    get_inventory_status,
+)
 from .models import Booking, Review
 from .serializers import (
     BookingCreateSerializer,
@@ -85,16 +90,24 @@ class RoomSearchAPIView(APIView):
         if not filterset.is_valid():
             return Response(filterset.errors, status=status.HTTP_400_BAD_REQUEST)
 
+        # get counts of filtered room types
+        room_types = get_inventory_status(filterset.qs, check_in_date, check_out_date)
+
         # calculate total price for each result
         results = []
-        for room_type in filterset.qs:
-            total = calculate_total_price(room_type, check_in_date, check_out_date)
+        for room_type in room_types:
+            total_price = calculate_total_price(
+                room_type, check_in_date, check_out_date
+            )
 
             # convert model to dictionary
             data = RoomTypeSerializer(filterset.qs).data
             # inject new field in the model
-            data["total_price_for_stay"] = total
+            data["total_price_for_stay"] = total_price
             results.append(data)
+
+        # sort most available rooms at top
+        results.sort(key=lambda x: x["rooms_left"], reverse=True)
 
         return Response(results)
 
