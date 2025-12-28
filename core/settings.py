@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'django_celery_beat',
     'django_filters',
+    'debug_toolbar',
 ]
 
 MIDDLEWARE = [
@@ -58,6 +59,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
 
 ROOT_URLCONF = 'core.urls'
@@ -169,3 +171,7 @@ CELERY_BEAT_SCHEDULE = {
         'schedule': crontab(minute='*/1'),
     }
 }
+
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
