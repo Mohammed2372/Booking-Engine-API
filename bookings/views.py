@@ -9,6 +9,7 @@ from drf_spectacular.types import OpenApiTypes
 
 from .services import (
     calculate_total_price,
+    cancel_booking,
     find_available_room_types,
     create_booking,
     get_inventory_status,
@@ -150,6 +151,39 @@ class BookingCreateAPIView(APIView):
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class BookingCancelApIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        request=None,
+        responses={200: "Booking Cancelled"},
+        description="Cancel a booking. Applies penalty if within 48 hours check in.",
+    )
+    def post(self, request, booking_id):
+        try:
+            booking = Booking.objects.get(id=booking_id, user=request.user)
+        except Booking.DoesNotExist:
+            return Response(
+                {"error": "Booking not found."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # call service
+        try:
+            cancelled_booking = cancel_booking(booking)
+
+            return Response(
+                {
+                    "status": "cancelled",
+                    "refund_amount": cancelled_booking.refund_amount,
+                    "penalty_applied": cancelled_booking.penalty_applied,
+                    "message": "Booking cancelled successfully.",
+                },
+                status=status.HTTP_200_OK,
+            )
+        except ValueError as e:
+            return Response({"error": str(e)}, status=400)
 
 
 class ReviewCreateAPIView(APIView):

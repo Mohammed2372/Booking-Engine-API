@@ -1,6 +1,8 @@
+from decimal import Decimal
 from django.db import transaction
 from django.db.models import Q
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 from psycopg2.extras import DateRange
 from datetime import date, timedelta
 
@@ -139,3 +141,42 @@ def get_inventory_status(room_types_list, check_in, check_out):
         room_type.rooms_left = max(0, available_rooms)
 
     return room_types_list
+
+
+def cancel_booking(booking):
+    # check on booking
+    if booking.status == Booking.Status.CANCELLED:
+        raise ValidationError("Booking is already cancelled")
+
+    # calculate time difference
+    now = timezone.now()
+    check_in_datetime = timezone.datetime.combine(
+        booking.check_in, timezone.datetime.min.time()
+    )
+    check_in_datetime = timezone.make_aware(check_in_datetime)
+    time_until_check_in = check_in_datetime - now
+
+    # define policy
+    hours_left = time_until_check_in.total_seconds() / 3600
+    total_paid = booking.total_price
+    refund_amount = total_paid
+    has_penalty = False
+
+    if hours_left < 48:
+        # check on penalty
+        nights = (booking.check_out - booking.check_in).days
+        one_night_rate = total_paid / nights if nights > 0 else total_paid
+
+        refund_amount = max(Decimal("0.00"), total_paid - one_night_rate)
+        has_penalty = True
+
+    # update database
+    booking.status = Booking.Status.CANCELLED
+    booking.canceled_at = now
+    booking.refund_amount = refund_amount
+    booking.penalty_applied = has_penalty
+    # TODO: need payment gateway to be True
+    booking.is_refunded = False
+    booking.save()
+
+    return booking

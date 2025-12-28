@@ -31,6 +31,14 @@ class Booking(Model):
         max_digits=10, decimal_places=2, null=True, blank=True
     )
 
+    # Cancellation fields
+    is_refunded = models.BooleanField(default=False)
+    canceled_at = models.DateTimeField(null=True, blank=True)
+    refund_amount = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True
+    )
+    penalty_applied = models.BooleanField(default=False)
+
     class Meta:
         # constraints from the database itself
         constraints = [
