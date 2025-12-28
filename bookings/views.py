@@ -126,11 +126,20 @@ class BookingCreateAPIView(APIView):
         if serializer.is_valid():
             data = serializer.validated_data
 
+            # convert slug to ID
+            try:
+                room_type = RoomType.objects.get(slug=data["room_type_slug"])
+            except RoomType.DoesNotExist:
+                return Response(
+                    {"error": "Invalid room type name."},
+                    status=400,
+                )
+
             # create booking
             try:
                 booking = create_booking(
                     user=request.user,
-                    room_type_id=data["room_type_id"],
+                    room_type_id=room_type.id,
                     check_in=data["check_in"],
                     check_out=data["check_out"],
                 )

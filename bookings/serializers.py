@@ -43,7 +43,8 @@ class RoomTypeSerializer(ModelSerializer):
 class BookingCreateSerializer(Serializer):
     """Input validation for creating booking"""
 
-    room_type_id = serializers.IntegerField()
+    # room_type_id = serializers.IntegerField()
+    room_type_slug = serializers.SlugField()
     check_in = serializers.DateField()
     check_out = serializers.DateField()
 
