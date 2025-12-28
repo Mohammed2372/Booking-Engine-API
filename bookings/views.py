@@ -171,12 +171,12 @@ class ReviewCreateAPIView(APIView):
                 review = Review.objects.create(
                     booking=booking,
                     rating=serializer.validated_data["rating"],
-                    comment=serializer.validate_data.get("comment", ""),
+                    comment=serializer.validated_data.get("comment", ""),
                 )
                 return Response(
                     {
                         "message": "Review submitted!",
-                        "review": ReviewCreateSerializer(review),
+                        "review": ReviewCreateSerializer(review).data,
                     },
                     status=status.HTTP_201_CREATED,
                 )
