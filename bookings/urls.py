@@ -2,6 +2,8 @@ from django.urls import path
 
 from .views import (
     BookingCancelApIView,
+    BookingListAPIView,
+    BookingRetrieveAPIView,
     ReviewCreateAPIView,
     RoomSearchAPIView,
     BookingCreateAPIView,
@@ -11,7 +13,12 @@ urlpatterns = [
     path("search/", RoomSearchAPIView.as_view(), name="rooms-search"),
     path("book/", BookingCreateAPIView.as_view(), name="book-rooms-create"),
     path("review/", ReviewCreateAPIView.as_view(), name="create-review"),
-    # TODO: make booking detail page
+    path("bookings/", BookingListAPIView.as_view(), name="my-bookings"),
+    path(
+        "bookings/<int:booking_id>/",
+        BookingRetrieveAPIView.as_view(),
+        name="booking-detail",
+    ),
     path(
         "bookings/<int:pk>/cancel/",
         BookingCancelApIView.as_view(),

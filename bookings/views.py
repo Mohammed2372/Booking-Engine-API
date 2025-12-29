@@ -1,11 +1,12 @@
+from django.db.models.manager import BaseManager
 from django.utils.dateparse import parse_date
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
-
 
 from .services import (
     calculate_total_price,
@@ -151,6 +152,23 @@ class BookingCreateAPIView(APIView):
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class BookingListAPIView(ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = BookingDetailSerializer
+
+    def get_queryset(self) -> BaseManager[Booking]:
+        return Booking.objects.filter(user=self.request.user).order_by("-id")
+
+
+class BookingRetrieveAPIView(RetrieveAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = BookingDetailSerializer
+    lookup_field = "id"
+
+    def get_queryset(self) -> BaseManager[Booking]:
+        return Booking.objects.filter(user=self.request.user)
 
 
 class BookingCancelApIView(APIView):

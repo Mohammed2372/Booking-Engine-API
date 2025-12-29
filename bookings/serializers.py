@@ -73,6 +73,9 @@ class BookingDetailSerializer(ModelSerializer):
             "check_out",
             "room_name",
             "room_number",
+            "cancelled_at",
+            "refund_amount",
+            "penalty_applied",
         ]
 
     def get_check_in(self, obj):
@@ -80,6 +83,9 @@ class BookingDetailSerializer(ModelSerializer):
 
     def get_check_out(self, obj):
         return obj.stay_range.upper if obj.stay_range else None
+
+    def get_thumbnail(self, obj):
+        return obj.room.room_type.images[0] if obj.room.room_type.images else None
 
 
 class ReviewCreateSerializer(ModelSerializer):
