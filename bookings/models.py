@@ -33,7 +33,7 @@ class Booking(Model):
 
     # Cancellation fields
     is_refunded = models.BooleanField(default=False)
-    canceled_at = models.DateTimeField(null=True, blank=True)
+    cancelled_at = models.DateTimeField(null=True, blank=True)
     refund_amount = models.DecimalField(
         max_digits=10, decimal_places=2, null=True, blank=True
     )

@@ -8,6 +8,7 @@ from .views import (
     ReviewCreateAPIView,
     RoomSearchAPIView,
     BookingCreateAPIView,
+    StripeWebhookAPIView,
 )
 
 urlpatterns = [
@@ -25,6 +26,7 @@ urlpatterns = [
         BookingCheckoutAPIView.as_view(),
         name="booking-checkout",
     ),
+    path("webhook/", StripeWebhookAPIView.as_view(), name="stripe-webhook"),
     path(
         "bookings/<int:pk>/cancel/",
         BookingCancelAPIView.as_view(),

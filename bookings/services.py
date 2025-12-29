@@ -1,4 +1,5 @@
 from decimal import Decimal
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
 from django.core.exceptions import ValidationError
@@ -139,7 +140,7 @@ def get_inventory_status(room_types_list, check_in, check_out):
         # calculate available rooms
         available_rooms = total_rooms - busy_rooms
 
-        room_type.total_inventory = total_rooms
+        # room_type.total_inventory = total_rooms
         room_type.rooms_left = max(0, available_rooms)
 
     return room_types_list
@@ -174,7 +175,7 @@ def cancel_booking(booking):
 
     # update database
     booking.status = Booking.Status.CANCELLED
-    booking.canceled_at = now
+    booking.cancelled_at = now
     booking.refund_amount = refund_amount
     booking.penalty_applied = has_penalty
     booking.is_refunded = True
@@ -184,6 +185,7 @@ def cancel_booking(booking):
 
 
 def create_payment_intent(booking):
+    stripe.api_key = settings.STRIPE_SECRET_KEY
     if booking.total_price <= 0:
         raise ValueError("Booking price must be greater than zero.")
 

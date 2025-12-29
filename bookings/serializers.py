@@ -16,7 +16,7 @@ class RoomTypeSerializer(ModelSerializer):
     city = serializers.CharField(source="property.city", read_only=True)
     average_rating = serializers.FloatField(read_only=True)
     review_count = serializers.FloatField(read_only=True)
-    total_inventory = serializers.IntegerField(read_only=True)
+    # total_inventory = serializers.IntegerField(read_only=True)
     rooms_left = serializers.IntegerField(read_only=True)
 
     class Meta:
@@ -35,11 +35,8 @@ class RoomTypeSerializer(ModelSerializer):
             "images",
             "average_rating",
             "review_count",
-            # NOTE: do not show the total room count of the room type to user
-            "total_inventory",
             "rooms_left",
         ]
-        exclude = ["total_inventory"]
 
 
 class BookingCreateSerializer(Serializer):

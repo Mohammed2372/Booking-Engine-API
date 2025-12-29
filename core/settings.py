@@ -183,3 +183,4 @@ INTERNAL_IPS = [
 # Scroll down to the bottom and add Stripe:
 STRIPE_PUBLIC_KEY = os.getenv("STRIPE_PUBLIC_KEY")
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
+STRIPE_WEBHOOK_KEY = os.getenv("STRIPE_WEBHOOK_SECRET")
