@@ -39,6 +39,7 @@ class RoomTypeSerializer(ModelSerializer):
             "total_inventory",
             "rooms_left",
         ]
+        exclude = ["total_inventory"]
 
 
 class BookingCreateSerializer(Serializer):
@@ -106,7 +107,6 @@ class ReviewCreateSerializer(ModelSerializer):
             raise serializers.ValidationError("Invalid booking ID.")
 
         # check if booking is complete only, can't review without booking
-        # TODO: make it check if not completed only (!= Completed)
-        if booking.status == Booking.Status.CANCELLED:
+        if booking.status != Booking.Status.CONFIRMED:
             raise serializers.ValidationError("You can only review completed stays.")
         return value

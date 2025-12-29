@@ -38,6 +38,8 @@ class Booking(Model):
         max_digits=10, decimal_places=2, null=True, blank=True
     )
     penalty_applied = models.BooleanField(default=False)
+    # payment
+    stripe_payment_intent_id = models.CharField(max_length=200, null=True, blank=True)
 
     class Meta:
         # constraints from the database itself

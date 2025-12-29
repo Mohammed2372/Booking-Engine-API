@@ -8,9 +8,12 @@ from rest_framework.generics import ListAPIView, RetrieveAPIView
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
 
+from core import settings
+
 from .services import (
     calculate_total_price,
     cancel_booking,
+    create_payment_intent,
     find_available_room_types,
     create_booking,
     get_inventory_status,
@@ -152,6 +155,38 @@ class BookingCreateAPIView(APIView):
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class BookingCheckoutAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        request=None,
+        responses={200: "Stripe Client Secret"},
+        description="Generates a Stripe Payment Intent for this booking.",
+    )
+    def post(self, request, booking_id):
+        # get booking
+        try:
+            booking = Booking.objects.get(id=booking_id, user=request.user)
+        except Booking.DoesNotExist:
+            return Response({"error": "Booking not found."}, status=400)
+
+        # check if already paid
+        if booking.status == Booking.Status.CONFIRMED:
+            return Response({"error": "Booking is already paid"}, status=200)
+
+        # create stripe intent
+        try:
+            client_secret = create_payment_intent(booking)
+            return Response(
+                {
+                    "client_secret": client_secret,
+                    "stripe_public_key": settings.STRIPE_PUBLIC_KEY,
+                }
+            )
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
 
 
 class BookingListAPIView(ListAPIView):

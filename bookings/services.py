@@ -6,6 +6,8 @@ from django.utils import timezone
 from psycopg2.extras import DateRange
 from datetime import date, timedelta
 
+import stripe
+
 from inventory.models import PricingRule, Room, RoomType
 from bookings.models import Booking
 
@@ -175,8 +177,33 @@ def cancel_booking(booking):
     booking.canceled_at = now
     booking.refund_amount = refund_amount
     booking.penalty_applied = has_penalty
-    # TODO: need payment gateway to be True
-    booking.is_refunded = False
+    booking.is_refunded = True
     booking.save()
 
     return booking
+
+
+def create_payment_intent(booking):
+    if booking.total_price <= 0:
+        raise ValueError("Booking price must be greater than zero.")
+
+    try:
+        amount_in_cents = booking.total_price * 100
+
+        # create intent
+        intent = stripe.PaymentIntent.create(
+            amount=amount_in_cents,
+            currency="usd",
+            metadata={
+                "booking_id": booking.id,
+                "user_email": booking.user.email,
+            },
+        )
+
+        # save intent ID
+        booking.stripe_payment_intent_id = intent.id
+        booking.save()
+
+        return intent["client_secret"]
+    except Exception as e:
+        raise Exception(f"Stript error {str(e)}")
