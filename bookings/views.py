@@ -236,7 +236,7 @@ class BookingCancelAPIView(APIView):
                     "status": "cancelled",
                     "refund_amount": cancelled_booking.refund_amount,
                     "penalty_applied": cancelled_booking.penalty_applied,
-                    "message": "Booking cancelled successfully.",
+                    "message": f"Booking cancelled successfully for booking number ({booking_id}).",
                 },
                 status=status.HTTP_200_OK,
             )
@@ -284,7 +284,7 @@ class StripeWebhookAPIView(APIView):
 
     def post(self, request):
         stripe.api_key = settings.STRIPE_SECRET_KEY
-        
+
         payload = request.body
         sig_header = request.META.get("HTTP_STRIPE_SIGNATURE")
         endpoint_secret = settings.STRIPE_WEBHOOK_KEY

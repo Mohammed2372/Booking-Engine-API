@@ -28,7 +28,7 @@ urlpatterns = [
     ),
     path("webhook/", StripeWebhookAPIView.as_view(), name="stripe-webhook"),
     path(
-        "bookings/<int:pk>/cancel/",
+        "bookings/<int:booking_id>/cancel/",
         BookingCancelAPIView.as_view(),
         name="cancel-booking",
     ),

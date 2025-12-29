@@ -149,12 +149,16 @@ def get_inventory_status(room_types_list, check_in, check_out):
 def cancel_booking(booking):
     # check on booking
     if booking.status == Booking.Status.CANCELLED:
-        raise ValidationError("Booking is already cancelled")
+        raise ValidationError(f"Booking number {booking.id} is already cancelled")
+
+    # extract check in and check out dates
+    check_in = booking.stay_range.lower
+    check_out = booking.stay_range.upper
 
     # calculate time difference
     now = timezone.now()
     check_in_datetime = timezone.datetime.combine(
-        booking.check_in, timezone.datetime.min.time()
+        check_in, timezone.datetime.min.time()
     )
     check_in_datetime = timezone.make_aware(check_in_datetime)
     time_until_check_in = check_in_datetime - now
@@ -167,7 +171,7 @@ def cancel_booking(booking):
 
     if hours_left < 48:
         # check on penalty
-        nights = (booking.check_out - booking.check_in).days
+        nights = (check_out - check_in).days
         one_night_rate = total_paid / nights if nights > 0 else total_paid
 
         refund_amount = max(Decimal("0.00"), total_paid - one_night_rate)
@@ -190,7 +194,7 @@ def create_payment_intent(booking):
         raise ValueError("Booking price must be greater than zero.")
 
     try:
-        amount_in_cents = booking.total_price * 100
+        amount_in_cents = int(booking.total_price * 100)
 
         # create intent
         intent = stripe.PaymentIntent.create(
