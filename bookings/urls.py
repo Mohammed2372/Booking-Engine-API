@@ -1,7 +1,7 @@
 from django.urls import path
 
 from .views import (
-    BookingCancelApIView,
+    BookingCancelAPIView,
     BookingCheckoutAPIView,
     BookingListAPIView,
     BookingRetrieveAPIView,
@@ -27,7 +27,7 @@ urlpatterns = [
     ),
     path(
         "bookings/<int:pk>/cancel/",
-        BookingCancelApIView.as_view(),
+        BookingCancelAPIView.as_view(),
         name="cancel-booking",
     ),
 ]

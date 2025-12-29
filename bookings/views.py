@@ -201,12 +201,13 @@ class BookingRetrieveAPIView(RetrieveAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = BookingDetailSerializer
     lookup_field = "id"
+    lookup_url_kwarg = "booking_id"
 
     def get_queryset(self) -> BaseManager[Booking]:
         return Booking.objects.filter(user=self.request.user)
 
 
-class BookingCancelApIView(APIView):
+class BookingCancelAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
