@@ -27,7 +27,7 @@ def create_user_profile(sender, instance, created, **kwargs):
 
 class Wishlist(Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="wishlist")
-    room_type = models.ForeignKey(RoomType, on_delete=models.CASCADE())
+    room_type = models.ForeignKey(RoomType, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
