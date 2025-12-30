@@ -10,10 +10,10 @@ from drf_spectacular.types import OpenApiTypes
 from .models import RoomType
 from .serializers import RoomTypeSerializer
 from .services import (
-    calculate_total_price,
     find_available_room_types,
     get_inventory_status,
 )
+from bookings.services import calculate_total_price
 from .filters import RoomTypeFilter
 
 

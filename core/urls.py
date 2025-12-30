@@ -25,6 +25,8 @@ from debug_toolbar.toolbar import debug_toolbar_urls
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include("bookings.urls")),
+    path("api/", include("inventory.urls")),
+    path("api/", include("authentication.urls")),
     # Swagger
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(
