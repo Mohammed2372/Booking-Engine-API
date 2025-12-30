@@ -35,6 +35,7 @@ class BookingAdmin(admin.ModelAdmin):
             "PENDING": "orange",
             "CONFIRMED": "green",
             "CANCELLED": "red",
+            "EXPIRED": "grey",
         }
         return format_html(
             '<span style="color: white; background-color: {}; padding: 5px; border-radius: 5px;">{}</span>',

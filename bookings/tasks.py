@@ -24,7 +24,7 @@ def cancel_expired_bookings():
 
     if count > 0:
         # use bulk update as it is faster than looping
-        expired_bookings.update(status=Booking.Status.CANCELLED)
+        expired_bookings.update(status=Booking.Status.EXPIRED)
         return f"Cancelled {count} expired bookings."
 
     return "No expired bookings found."

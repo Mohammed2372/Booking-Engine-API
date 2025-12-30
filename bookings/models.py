@@ -16,6 +16,7 @@ class Booking(Model):
         PENDING = "PENDING", _("Pending")
         CONFIRMED = "CONFIRMED", _("Confirmed")
         CANCELLED = "CANCELLED", _("Canceled")
+        EXPIRED = "EXPIRED", _("Expired")
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="bookings"
