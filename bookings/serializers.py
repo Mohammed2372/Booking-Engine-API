@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer, Serializer
+from datetime import date
 
 from .models import Booking, Review
 
@@ -72,3 +73,21 @@ class ReviewCreateSerializer(ModelSerializer):
         if booking.status != Booking.Status.CONFIRMED:
             raise serializers.ValidationError("You can only review completed stays.")
         return value
+
+
+class CheckoutSerializer(serializers.Serializer):
+    room_type_id = serializers.IntegerField()
+    check_in = serializers.DateField()
+    check_out = serializers.DateField()
+
+    # Optional: Allow immediate payment testing (The "Magic" Token)
+    payment_method_id = serializers.CharField(
+        required=False, help_text="Send 'pm_card_visa' to pay instantly"
+    )
+
+    def validate(self, data):
+        if data["check_in"] >= data["check_out"]:
+            raise serializers.ValidationError("Check-in must be before check-out.")
+        if data["check_in"] < date.today():
+            raise serializers.ValidationError("Cannot book in the past.")
+        return data

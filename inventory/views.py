@@ -51,7 +51,7 @@ class RoomSearchAPIView(APIView):
             OpenApiParameter(
                 name="name",
                 description="Room King (e.g. DELUXE, SINGLE)",
-                required=True,
+                required=False,
                 type=str,
                 enum=[c[0] for c in RoomType.RoomKind.choices],
             ),

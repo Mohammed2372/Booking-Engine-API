@@ -26,7 +26,7 @@ class RoomTypeSerializer(ModelSerializer):
             "slug",
             "hotel_name",
             "city",
-            "name",
+            # "name",
             "base_price",
             "capacity",
             "view_type",

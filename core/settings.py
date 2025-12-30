@@ -182,9 +182,9 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_TIMEZONE = "UTC"
 
 CELERY_BEAT_SCHEDULE = {
-    'cleanup-expired-bookings-every-minute': {
+    'cleanup-expired-bookings-every-10-minute': {
         'task': 'bookings.tasks.cancel_expired_bookings',
-        'schedule': crontab(minute='*/1'),
+        'schedule': crontab(minute='*/10'),
     }
 }
 

@@ -7,7 +7,9 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.generics import ListAPIView, RetrieveAPIView
-from drf_spectacular.utils import extend_schema
+from rest_framework import serializers
+from drf_spectacular.utils import extend_schema, inline_serializer
+
 
 import stripe
 
@@ -73,9 +75,20 @@ class BookingCheckoutAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
-        request=None,
+        # request=None,
+        # NOTE: for testing only
+        request=inline_serializer(
+            name="CheckoutRequest",
+            fields={
+                "auto_confirm": serializers.BooleanField(
+                    required=False,
+                    default=False,
+                    help_text="Set to true to pay immediately via backend mock.",
+                )
+            },
+        ),
         responses={200: "Stripe Client Secret"},
-        description="Generates a Stripe Payment Intent for this booking.",
+        description="Generates a Payment Intent. Send 'auto_confirm': true to pay immediately.",
     )
     def post(self, request, booking_id):
         # get booking
@@ -87,10 +100,45 @@ class BookingCheckoutAPIView(APIView):
         # check if already paid
         if booking.status == Booking.Status.CONFIRMED:
             return Response({"error": "Booking is already paid"}, status=200)
+        elif booking.status == Booking.Status.CANCELLED:
+            return Response({"error": "Booking is already cancelled"}, status=200)
 
         # create stripe intent
         try:
             client_secret = create_payment_intent(booking)
+
+            # NOTE: auto payment for testing only
+            # --- #
+            if request.data.get("auto_confirm") is True:
+                stripe.api_key = settings.STRIPE_SECRET_KEY
+
+                intent = stripe.PaymentIntent.confirm(
+                    booking.stripe_payment_intent_id,
+                    payment_method="pm_card_visa",  # Force Visa Card
+                    return_url="http://localhost:8000/payment-complete",  # Required by Stripe
+                )
+
+                if intent.status == "succeeded":
+                    # Update DB immediately
+                    booking.status = Booking.Status.CONFIRMED
+                    booking.is_paid = True
+                    booking.save()
+
+                    return Response(
+                        {
+                            "status": "success",
+                            "message": "Payment confirmed automatically.",
+                            "booking_id": booking.id,
+                        },
+                        status=200,
+                    )
+                else:
+                    return Response(
+                        {"error": f"Auto-payment failed. Status: {intent.status}"},
+                        status=400,
+                    )
+            # --- #
+
             return Response(
                 {
                     "client_secret": client_secret,
