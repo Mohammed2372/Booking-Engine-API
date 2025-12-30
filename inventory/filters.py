@@ -1,7 +1,7 @@
 import django_filters as df
 from django_filters import FilterSet
 
-from inventory.models import RoomType
+from .models import RoomType
 
 
 class RoomTypeFilter(FilterSet):

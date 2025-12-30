@@ -6,13 +6,11 @@ from .views import (
     BookingListAPIView,
     BookingRetrieveAPIView,
     ReviewCreateAPIView,
-    RoomSearchAPIView,
     BookingCreateAPIView,
     StripeWebhookAPIView,
 )
 
 urlpatterns = [
-    path("search/", RoomSearchAPIView.as_view(), name="rooms-search"),
     path("book/", BookingCreateAPIView.as_view(), name="book-rooms-create"),
     path("review/", ReviewCreateAPIView.as_view(), name="create-review"),
     path("bookings/", BookingListAPIView.as_view(), name="my-bookings"),
