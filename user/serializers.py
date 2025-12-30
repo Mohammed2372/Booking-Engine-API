@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
 
-from .models import UserProfile
+from .models import UserProfile, Wishlist
 
 
 class UserProfileSerializer(ModelSerializer):
@@ -37,3 +37,13 @@ class UserProfileSerializer(ModelSerializer):
         user.save()
 
         return super().update(instance, validated_data)
+
+
+class WishlistSerializer(ModelSerializer):
+    room_type_name = serializers.CharField(source="room_type.name", read_only=True)
+    room_type_price = serializers.CharField(source="room_type.price", read_only=True)
+
+    class Meta:
+        model = Wishlist
+        fields = ["id", "room_type", "room_type_name", "room_type_price", "created_at"]
+        read_only_fields = ["id", "created_at"]

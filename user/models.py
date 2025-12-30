@@ -3,6 +3,9 @@ from django.db.models import Model
 from django.db.models.signals import post_save
 from django.conf import settings
 from django.dispatch import receiver
+from django.contrib.auth.models import User
+
+from inventory.models import RoomType
 
 
 # Create your models here.
@@ -20,3 +23,15 @@ class UserProfile(Model):
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         UserProfile.objects.create(user=instance)
+
+
+class Wishlist(Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="wishlist")
+    room_type = models.ForeignKey(RoomType, on_delete=models.CASCADE())
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "room_type")  # to prevent duplicate likes
+
+    def __str__(self) -> str:
+        return f"{self.user.username} liked {self.room_type.name}"
