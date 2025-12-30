@@ -32,4 +32,4 @@ Thumbs.db
 *.log
 
 # stripe app
-stripe_1.34.0_windows_x86_64
+stripe.exe
