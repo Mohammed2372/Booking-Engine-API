@@ -154,6 +154,14 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle', # For guests (login/register)
+        'rest_framework.throttling.UserRateThrottle', # For logged-in users
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '5/minute',   # Max 5 tries per minute for anonymous users
+        'user': '100/day',   # Max 100 requests per day for real users
+    }
 }
 
 SPECTACULAR_SETTINGS = {
