@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  web:
+    image: mohammed237/booking-engine:v1
+    command: sh -c "python manage.py migrate && gunicorn core.wsgi:application --bind 0.0.0.0:8000"
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+    restart: always
+
+  db:
+    image: postgres:15-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=hello_django
+      - POSTGRES_PASSWORD=hello_django
+      - POSTGRES_DB=booking_db
+    restart: always
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+
+  celery:
+    image: mohammed237/booking-engine:v1
+    command: celery -A core worker -l info
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+    restart: always
+
+  celery-beat:
+    image: mohammed237/booking-engine:v1
+    command: celery -A core beat -l info
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+    restart: always
+
+volumes:
+  postgres_data:

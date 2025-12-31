@@ -30,13 +30,13 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-$(vw$9wtv1kos61g%6xejeclsb)k!k)mjh(v&9d=#e!l&)pv=7'
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+# Allow specific hosts or everything (*) if DEBUG is True
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost 127.0.0.1").split(" ")
 
 # Application definition
 
@@ -94,13 +94,15 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'booking_db',
-        'USER': 'postgres',
-        'PASSWORD': 'Mohamed@237',
-        'HOST': 'localhost',
-        'PORT': '5432',
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.getenv("POSTGRES_DB", "booking_db"),
+        "USER": os.getenv("POSTGRES_USER", "postgres"),
+        "PASSWORD": os.getenv("POSTGRES_PASSWORD", "Mohamed@237"),  # Fallback for local
+        "HOST": os.getenv(
+            "SQL_HOST", "localhost"
+        ),  # Docker uses 'db', Local uses 'localhost'
+        "PORT": os.getenv("SQL_PORT", "5432"),
     }
 }
 
@@ -174,17 +176,18 @@ SPECTACULAR_SETTINGS = {
 }
 
 # Celery Settings
-CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
-CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/0"
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER", "redis://127.0.0.1:6379/0")
+CELERY_RESULT_BACKEND = os.getenv("CELERY_BACKEND", "redis://127.0.0.1:6379/0")
+
 CELERY_ACCEPT_CONTENT = ["application/json"]
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TASK_SERIALIZER = "json"
 CELERY_TIMEZONE = "UTC"
 
 CELERY_BEAT_SCHEDULE = {
-    'cleanup-expired-bookings-every-10-minute': {
-        'task': 'bookings.tasks.cancel_expired_bookings',
-        'schedule': crontab(minute='*/10'),
+    "cleanup-expired-bookings-every-10-minute": {
+        "task": "bookings.tasks.cancel_expired_bookings",
+        "schedule": crontab(minute="*/10"),
     }
 }
 
