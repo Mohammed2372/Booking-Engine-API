@@ -1,17 +1,15 @@
-# 🏨 Django Hotel Booking Engine API
+# 🏨 Hotel Booking Engine API
 
-![Python](https://img.shields.io/badge/Python-3.10%2B-blue) ![Django](https://img.shields.io/badge/Framework-Django-green) ![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-336791) ![Redis](https://img.shields.io/badge/Queue-Redis-red) ![Celery](https://img.shields.io/badge/Worker-Celery-brightgreen) ![Stripe](https://img.shields.io/badge/Payments-Stripe-blueviolet) ![JWT](https://img.shields.io/badge/Auth-JWT-black)
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue) ![Django](https://img.shields.io/badge/Framework-Django-green) ![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-336791) ![Redis](https://img.shields.io/badge/Queue-Redis-red) ![Celery](https://img.shields.io/badge/Worker-Celery-brightgreen) ![Stripe](https://img.shields.io/badge/Payments-Stripe-blueviolet) ![JWT](https://img.shields.io/badge/Auth-JWT-black) [![Docker image](https://img.shields.io/badge/Container-Docker-2496ED)](https://hub.docker.com/repository/docker/mohammed237/booking-engine)
 
 A robust, production-ready REST API for a hotel booking system. Features dynamic pricing, real-time inventory management, automated expiration of unpaid bookings ("Zombie Killer"), and secure payments via Stripe. Built with **Django REST Framework**, **Celery**, **Redis**, and **Stripe**.
-
----
 
 ## 📋 Table of Contents
 
 - [Features](#-features)
 - [API Flow Diagrams](#-api-flow-diagrams)
-- [Getting Started](#-getting-started)
-- [Running the Application](#️-running-the-application)
+- [Quick Start (Docker)](#-quick-start-docker---easiest-method)
+- [Manual Development Setup](#-manual-development-setup)
 - [Configuration Reference](#-configuration-reference)
 - [Testing Guide](#-testing-guide)
 - [API Documentation](#-api-documentation)
@@ -23,25 +21,25 @@ A robust, production-ready REST API for a hotel booking system. Features dynamic
 
 ### 📅 Booking & Inventory
 
-- **Real-time Availability:** Prevents double-booking using atomic database transactions.
-- **Dynamic Pricing Engine:** Calculates prices based on:
-  - Date ranges (e.g., High Season).
-  - Days of the week (e.g., Weekend rates).
-  - Room types.
-- **The "Zombie Killer" Task:** A background job (Celery) that automatically expires "Pending" bookings if they remain unpaid for more than 15 minutes, releasing inventory back to the pool.
+- **Real-time Availability**: Prevents double-booking using atomic database transactions.
+- **Dynamic Pricing Engine**: Calculates prices based on:
+  - Date ranges (e.g., High Season)
+  - Days of the week (e.g., Weekend rates)
+  - Room types
+- **The "Zombie Killer" Task**: A background job (Celery) that automatically expires "Pending" bookings if they remain unpaid for more than 15 minutes, releasing inventory back to the pool.
 
 ### 💳 Payments (Stripe)
 
-- **Payment Intents:** Secure handling of payments using Stripe's modern API.
-- **Webhooks:** Listens for Stripe events to automatically confirm bookings upon successful payment.
-- **"God Mode" Testing:** A developer-only feature to instantly confirm payments via API without a frontend (for testing purposes).
-- **Refund Handling:** Logic for calculating refunds and penalties based on cancellation policies (48-hour rule).
+- **Payment Intents**: Secure handling of payments using Stripe's modern API.
+- **Webhooks**: Listens for Stripe events to automatically confirm bookings upon successful payment.
+- **"God Mode" Testing**: A developer-only feature to instantly confirm payments via API without a frontend (for testing purposes).
+- **Refund Handling**: Logic for calculating refunds and penalties based on cancellation policies (48-hour rule).
 
 ### 🛠 Technical
 
-- **Authentication:** JWT (JSON Web Token) authentication.
-- **Documentation:** Auto-generated Swagger/OpenAPI docs via `drf-spectacular`.
-- **Dockerized:** Ready for containerized deployment.
+- **Authentication**: JWT (JSON Web Token) authentication.
+- **Documentation**: Auto-generated Swagger/OpenAPI docs via drf-spectacular.
+- **Dockerized**: Ready for containerized deployment.
 
 ---
 
@@ -74,263 +72,117 @@ graph TD
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Quick Start (Docker) - Easiest Method
+
+Use this method to run the entire system (Django, Postgres, Redis, Celery) instantly without installing any dependencies on your machine.
+
+**Prerequisites**: Only Docker Desktop and Git.
+
+> **💡 Quick Download**: Want to skip cloning the repository? You can pull the pre-built Docker image directly from Docker Hub:
+>
+> ```bash
+> docker pull mohammed237/booking-engine:v1
+> ```
+>
+> **[View image on Docker Hub](https://hub.docker.com/repository/docker/mohammed237/booking-engine)** for updates, documentation, and version history.
+
+### 1. Clone & Setup Environment
+
+```bash
+# Clone the repository
+git https://github.com/Mohammed2372/Booking-Engine-API.git
+cd Booking-Engine-API
+
+# Copy the example env file to create your local config
+cp .env.example .env
+# (On Windows use: copy .env.example .env)
+
+# Open the .env file and fill in your specific keys:
+# - SECRET_KEY
+# - STRIPE Keys (Public, Secret, Webhook)
+```
+
+### 2. Run the Application
+
+Run this single command to download the image, set up the database, and start the servers.
+
+```bash
+docker compose -f docker-compose.prod.yml up
+```
+
+- **API**: http://localhost:8000/api/ # main entrypoint
+- **Swagger Docs**: http://localhost:8000/api/docs/ # interactive API docs
+
+### 3. Create Admin User (Optional)
+
+To access the admin panel, create a superuser inside the running container:
+
+```bash
+docker compose -f docker-compose.prod.yml exec web python manage.py createsuperuser
+```
+
+---
+
+## 💻 Manual Development Setup
+
+Use this method only if you are a developer contributing to the code and want to run services individually for debugging.
 
 ### Prerequisites
 
 - Python 3.10+
 - PostgreSQL
 - Redis (for Celery)
-- Stripe CLI (for local webhook testing)
+- Stripe CLI
 
-### 1. Installation
+### 1. Environment Setup
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/booking-engine.git
-cd booking-engine
-
 # Create virtual environment
 python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+source .venv/bin/activate
+# On Windows: .venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
+
+# Create .env from example
+cp .env.example .env
 ```
 
-### 2. Environment Variables
+### 2. Install & Configure Services
 
-Create a `.env` file in the root directory:
+You must install these manually if running outside Docker:
 
-```ini
-# Django Settings
-DEBUG=True
-SECRET_KEY=your_django_secret_key_here
-DATABASE_URL=postgres://user:password@localhost:5432/booking_db
+#### A. PostgreSQL
 
-# Stripe Keys
-STRIPE_PUBLIC_KEY=pk_test_your_public_key_here
-STRIPE_SECRET_KEY=sk_test_your_secret_key_here
-STRIPE_WEBHOOK_KEY=whsec_your_webhook_secret_here
+- Install PostgreSQL for your OS.
+- Create a database named `booking_db`.
+- Update `.env` to set `SQL_HOST=localhost`.
 
-# Celery / Redis Configuration
-CELERY_BROKER_URL=redis://localhost:6379/0
-CELERY_RESULT_BACKEND=redis://localhost:6379/1
-```
+#### B. Redis
 
-### 3. Install & Configure PostgreSQL
+- Install Redis (`brew install redis` or download for Windows).
+- Ensure it is running on port 6379.
+- Update `.env` to set `CELERY_BROKER=redis://localhost:6379/0`.
 
-**On Windows (using PostgreSQL installer):**
+#### C. Stripe CLI
 
-1. Download from https://www.postgresql.org/download/windows/
-2. Run installer and follow setup wizard
-3. Remember the password you set for the `postgres` user
-4. Create a new database:
-   ```bash
-   psql -U postgres
-   CREATE DATABASE booking_db;
-   \q
-   ```
+- Install Stripe CLI to forward webhooks to localhost.
+- Run `stripe login`.
 
-**On macOS (using Homebrew):**
+### 3. Database Migrations
 
 ```bash
-brew install postgresql@15
-brew services start postgresql@15
-createdb booking_db
-```
-
-**On Linux (Ubuntu/Debian):**
-
-```bash
-sudo apt-get update && sudo apt-get install postgresql postgresql-contrib
-sudo -u postgres createdb booking_db
-```
-
-### 4. Install & Configure Redis
-
-Redis is required for Celery to work properly.
-
-**On Windows:**
-
-1. Download from https://github.com/microsoftarchive/redis/releases
-2. Extract and run `redis-server.exe`
-3. Or use Windows Subsystem for Linux (WSL):
-   ```bash
-   wsl
-   sudo apt-get install redis-server
-   sudo service redis-server start
-   ```
-
-**On macOS:**
-
-```bash
-brew install redis
-brew services start redis
-```
-
-**On Linux:**
-
-```bash
-sudo apt-get install redis-server
-sudo systemctl start redis-server
-sudo systemctl enable redis-server
-```
-
-**Verify Redis is running:**
-
-```bash
-redis-cli ping  # Should respond with PONG
-```
-
-### 5. Install & Configure Stripe CLI
-
-**Download Stripe CLI:**
-
-- Windows: https://github.com/stripe/stripe-cli/releases (download `.exe`)
-- macOS: `brew install stripe/stripe-cli/stripe`
-- Linux: Download from https://github.com/stripe/stripe-cli/releases
-
-**Authenticate with Stripe:**
-
-```bash
-stripe login
-# Follow prompts to authenticate with your Stripe account
-```
-
-Verify installation:
-
-```bash
-stripe --version
-```
-
-### 6. Database Migrations
-
-Before running the application for the first time:
-
-```bash
-# Apply all database migrations
 python manage.py migrate
-
-# Create admin user
 python manage.py createsuperuser
-# Follow prompts to create your admin account
-
-# (Optional) Load sample data
-python manage.py loaddata initial_data  # If fixtures exist
 ```
 
----
+### 4. Running Services (4 Terminal Windows Needed)
 
-## 🏃‍♂️ Running the Application
-
-The application requires multiple services running simultaneously. You can run them in separate terminal windows or use Docker Compose.
-
-### Prerequisites Check
-
-Before starting, verify all services are installed and running:
-
-```bash
-# Check Python
-python --version  # Should be 3.10+
-
-# Check PostgreSQL
-psql -U postgres -c "SELECT version();"
-
-# Check Redis
-redis-cli ping  # Should respond with PONG
-
-# Check Stripe CLI
-stripe --version
-
-# Verify Django installation
-python manage.py --version
-```
-
-### Running Services in Separate Terminals (Development)
-
-You need **4 terminal windows** to run the full stack:
-
-#### Terminal 1: Django Development Server
-
-```bash
-# Activate virtual environment
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-
-# Start Django server (default: http://localhost:8000)
-python manage.py runserver
-
-# You should see:
-# Starting development server at http://127.0.0.1:8000/
-```
-
-Access the API at: http://localhost:8000/api/
-
-#### Terminal 2: Celery Worker (Executes Async Tasks)
-
-The worker processes background tasks like sending emails, payment processing, etc.
-
-```bash
-# Activate virtual environment
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-
-# Start Celery worker
-celery -A core worker --loglevel=info --pool=solo
-
-# On Windows, use --pool=solo flag to avoid multiprocessing issues
-
-# You should see:
-# celery@yourcomputer ready to accept tasks.
-```
-
-**What the worker does:**
-
-- Processes booking expiration (Zombie Killer task)
-- Handles email notifications
-- Manages async Stripe operations
-
-#### Terminal 3: Celery Beat (Task Scheduler)
-
-The Beat scheduler runs periodic tasks at set intervals.
-
-```bash
-# Activate virtual environment
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-
-# Start Celery Beat scheduler
-celery -A core beat --loglevel=info
-
-# You should see periodic task execution logs
-```
-
-**Scheduled tasks:**
-
-- Zombie Killer: Runs every minute to expire unpaid bookings after 15 minutes
-
-#### Terminal 4: Stripe Webhook Listener (Local Testing Only)
-
-For local development, use Stripe CLI to forward webhook events to your server:
-
-```bash
-# Authenticate with Stripe (one-time setup)
-stripe login
-
-# Start listening for webhook events and forward to local Django server
-stripe listen --forward-to localhost:8000/api/webhook/
-
-# You should see:
-# Ready! Your webhook signing secret is: whsec_xxxxxxxxxxxxxxxxxxxx
-```
-
-**Important:** Copy the signing secret and add it to your `.env`:
-
-```ini
-STRIPE_WEBHOOK_KEY=whsec_xxxxxxxxxxxxxxxxxxxx
-```
-
----
-
----
+1. **Django Server**: `python manage.py runserver`
+2. **Celery Worker**: `celery -A core worker -l info`
+3. **Celery Beat**: `celery -A core beat -l info`
+4. **Stripe Listener**: `stripe listen --forward-to localhost:8000/api/webhook/`
 
 ## 🔧 Configuration Reference
 
@@ -357,24 +209,9 @@ CELERY_BEAT_SCHEDULE = {
 }
 ```
 
-### Redis Configuration
-
-Default configuration uses:
-
-- **Broker:** `redis://localhost:6379/0` (tasks)
-- **Result Backend:** `redis://localhost:6379/1` (results)
-- **Database 2+:** Available for caching/sessions
-
-To use different Redis databases, modify in `.env`:
-
-```ini
-CELERY_BROKER_URL=redis://localhost:6379/0
-CELERY_RESULT_BACKEND=redis://localhost:6379/1
-```
-
 ### Stripe Configuration
 
-**Keys location:** `core/settings.py`
+Keys location: `core/settings.py`
 
 ```python
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
@@ -382,9 +219,7 @@ STRIPE_PUBLIC_KEY = os.getenv("STRIPE_PUBLIC_KEY")
 STRIPE_WEBHOOK_KEY = os.getenv("STRIPE_WEBHOOK_KEY")
 ```
 
-**Webhook endpoint:** `POST /api/webhook/`
-
----
+Webhook endpoint: `POST /api/webhook/`
 
 ## 🧪 Testing Guide
 
@@ -392,18 +227,18 @@ STRIPE_WEBHOOK_KEY = os.getenv("STRIPE_WEBHOOK_KEY")
 
 To test that bookings expire after 15 minutes:
 
-1. **Create a Booking:** POST to `/api/bookings/`. Status will be `PENDING`.
-2. **Wait:** Wait 16 minutes OR manually modify the `created_at` timestamp in DB.
-3. **Check Status:** The Celery Beat task runs every minute. It should update status to `EXPIRED`.
-4. **Verify Inventory:** You should be able to book the same room again immediately.
+1. **Create a Booking**: POST to `/api/book/`. Status will be `PENDING`.
+2. **Wait**: Wait 16 minutes OR manually modify the `created_at` timestamp in DB.
+3. **Check Status**: The Celery Beat task runs every minute. It should update status to `EXPIRED`.
+4. **Verify Inventory**: You should be able to book the same room again immediately.
 
 ### 2. Stripe Payments (Backend Only / "God Mode")
 
 We implemented a special testing flag to bypass the frontend card entry.
 
-**Endpoint:** `POST /api/bookings/{id}/checkout/`
+**Endpoint**: `POST /api/bookings/{id}/checkout/`
 
-**Request Body:**
+**Request Body**:
 
 ```json
 {
@@ -411,13 +246,13 @@ We implemented a special testing flag to bypass the frontend card entry.
 }
 ```
 
-**Result:** The server contacts Stripe, forces a test charge using a Visa mock, and instantly updates the booking to `CONFIRMED`.
+**Result**: The server contacts Stripe, forces a test charge using a Visa mock, and instantly updates the booking to `CONFIRMED`.
 
 ### 3. Stripe Webhooks (Real Simulation)
 
 To test the real integration where Stripe notifies Django:
 
-1. **Start Stripe Listener:**
+1. **Start Stripe Listener**:
 
    ```bash
    stripe listen --forward-to localhost:8000/api/webhook/
@@ -431,20 +266,14 @@ To test the real integration where Stripe notifies Django:
    stripe payment_intents confirm pi_3Sk... --payment-method=pm_card_visa
    ```
 
-4. **Verify:** Check your terminal. The webhook should hit `/api/webhook/` and you should see "✅ Booking confirmed via Webhook."
+4. **Verify**: Check your terminal. The webhook should hit `/api/webhook/` and you should see "✅ Booking confirmed via Webhook."
 
 ### 4. Running Unit Tests
 
 ```bash
-# Run all tests
-python manage.py test
-
-# Run specific app tests
+# Run specific bookings app tests
 python manage.py test bookings
 
-# Run with coverage
-coverage run --source='.' manage.py test
-coverage report
 ```
 
 ---
@@ -453,16 +282,16 @@ coverage report
 
 Once the server is running, visit:
 
-- **Swagger UI:** http://localhost:8000/api/schema/swagger-ui/
-- **ReDoc:** http://localhost:8000/api/schema/redoc/
-- **Admin Panel:** http://localhost:8000/admin/
+- **Swagger UI**: http://localhost:8000/api/docs/ # for full interactive docs
+- **ReDoc**: http://localhost:8000/api/schema/redoc/ # for alternative docs view
+- **Admin Panel**: http://localhost:8000/admin/ # for managing models and admin dashboards
 
 ### Key Endpoints
 
 | Method | Endpoint                       | Description            |
 | ------ | ------------------------------ | ---------------------- |
-| GET    | `/api/rooms/search/`           | Search available rooms |
-| POST   | `/api/bookings/`               | Create a new booking   |
+| GET    | `/api/search/`                 | Search available rooms |
+| POST   | `/api/book/`                   | Create a new booking   |
 | GET    | `/api/bookings/{id}/`          | Get booking details    |
 | POST   | `/api/bookings/{id}/checkout/` | Initiate payment       |
 | POST   | `/api/bookings/{id}/cancel/`   | Cancel a booking       |
@@ -473,31 +302,22 @@ Once the server is running, visit:
 
 ## 📁 Project Structure
 
-Below is the real file/folder layout discovered in this repository root.
-
 ```
 Booking Engine/                         # repository root
 ├── .env.example                        # example env variables
-├── .gitignore                          # git ignore rules
-├── db.sqlite3                          # local SQLite DB (dev artifact)
 ├── manage.py                           # Django management entrypoint
 ├── README.md                           # this file
 ├── requirements.txt                    # Python dependencies
-
+│
 ├── authentication/                     # auth: registration & JWT
-│   ├── __init__.py                     # package marker
 │   ├── admin.py                        # Django admin registrations
-│   ├── apps.py                         # app config
 │   ├── models.py                       # auth-related models (users/profiles)
 │   ├── serializers.py                  # DRF serializers for auth
-│   ├── tests.py                        # unit tests for auth
 │   ├── urls.py                         # endpoints: register/login/refresh
 │   └── views.py                        # registration & auth views
-
+│
 ├── bookings/                           # booking domain logic
-│   ├── __init__.py                     # package marker
 │   ├── admin.py                        # admin for bookings/models
-│   ├── apps.py                         # app config
 │   ├── models.py                       # Booking, Reservation, etc.
 │   ├── serializers.py                  # DRF serializers for bookings
 │   ├── services.py                     # business logic & helpers
@@ -505,35 +325,30 @@ Booking Engine/                         # repository root
 │   ├── tests.py                        # unit tests for bookings
 │   ├── urls.py                         # booking-related endpoints
 │   └── views.py                        # booking API views
-
+│
 ├── core/                               # project core settings & entrypoints
-│   ├── __init__.py                     # package marker
-│   ├── asgi.py                         # ASGI entrypoint
 │   ├── celery.py                       # Celery app configuration
 │   ├── settings.py                     # Django settings
-│   ├── urls.py                         # root URL config (includes app urls)
-│   └── wsgi.py                         # WSGI entrypoint
-
+│   └── urls.py                         # root URL config (includes app urls)
+│
 ├── inventory/                          # rooms, room types, availability
-│   ├── __init__.py                     # package marker
-│   ├── admin.py                        # admin registrations for inventory
-│   ├── apps.py                         # app config
+│   ├── admin.py                        # admin for RoomType model
 │   ├── filters.py                      # DRF filters for search/listing
 │   ├── models.py                       # Room, RoomType, PricingRule models
 │   ├── serializers.py                  # DRF serializers for inventory
 │   ├── services.py                     # inventory helpers & pricing engine
-│   ├── tests.py                        # unit tests for inventory
 │   ├── urls.py                         # endpoints: room search
-│   └── views.py                        # inventory API views
-
-└── user/                               # user profile & wishlist
-    ├── __init__.py                     # package marker
-    ├── admin.py                        # user admin registrations
-    ├── apps.py                         # app config
+│   └── views.py                        # search & listing rooms API views
+│
+├── payments/                           # Stripe payment integration
+│   ├── services.py                     # create payment intents, webhooks
+│   ├── urls.py                         # endpoints: webhook
+│   └── views.py                        # Stripe webhook handler
+│
+└── user/                               # user profile & wishlist & reviews
+    ├── admin.py                        # user profile, wishlist and reviews dashboards
     ├── models.py                       # Profile, Wishlist models
     ├── serializers.py                  # DRF serializers for user
-    ├── tests.py                        # unit tests for user app
-    ├── urls.py                         # endpoints: profile, wishlist
+    ├── urls.py                         # endpoints: profile, wishlist, review
     └── views.py                        # user API views
-
 ```
