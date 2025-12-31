@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.utils.safestring import SafeText
 
-from .models import UserProfile, Wishlist
+from .models import Review, UserProfile, Wishlist
 
 
 # Register your models here.
@@ -27,3 +27,9 @@ class UserProfileAdmin(admin.ModelAdmin):
 class WishlistAdmin(admin.ModelAdmin):
     list_display = ["user", "room_type", "created_at"]
     list_filter = ["created_at"]
+
+
+@admin.register(Review)
+class ReviewAdmin(admin.ModelAdmin):
+    list_display = ["id", "booking__user", "booking", "rating", "comment", "created_at"]
+    list_filter = ["created_at", "rating"]

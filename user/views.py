@@ -1,13 +1,19 @@
 from django.db.models.manager import BaseManager
+from rest_framework.views import APIView
 from rest_framework.generics import RetrieveUpdateAPIView, ListCreateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
+from drf_spectacular.utils import extend_schema
 
 from inventory.models import RoomType
-
-from .models import UserProfile, Wishlist
-from .serializers import UserProfileSerializer, WishlistSerializer
+from bookings.models import Booking
+from .models import UserProfile, Wishlist, Review
+from .serializers import (
+    UserProfileSerializer,
+    WishlistSerializer,
+    ReviewCreateSerializer,
+)
 
 
 # Create your views here.
@@ -47,3 +53,37 @@ class WishlistView(ListCreateAPIView):
         return Response(
             self.get_serializer(wishlist_item).data, status=status.HTTP_201_CREATED
         )
+
+
+class ReviewCreateAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        request=ReviewCreateSerializer,
+        responses={201: "Review Created"},
+        description="Submit a review for a specific booking ID.",
+    )
+    def post(self, request):
+        serializer = ReviewCreateSerializer(
+            data=request.data, context={"request": request}
+        )
+        if serializer.is_valid():
+            booking = Booking.objects.get(id=serializer.validated_data["booking_id"])
+
+            try:
+                review = Review.objects.create(
+                    booking=booking,
+                    rating=serializer.validated_data["rating"],
+                    comment=serializer.validated_data.get("comment", ""),
+                )
+                return Response(
+                    {
+                        "message": "Review submitted!",
+                        "review": ReviewCreateSerializer(review).data,
+                    },
+                    status=status.HTTP_201_CREATED,
+                )
+            except Exception as e:
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

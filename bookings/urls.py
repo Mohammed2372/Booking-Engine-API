@@ -5,13 +5,11 @@ from .views import (
     BookingCheckoutAPIView,
     BookingListAPIView,
     BookingRetrieveAPIView,
-    ReviewCreateAPIView,
     BookingCreateAPIView,
 )
 
 urlpatterns = [
     path("book/", BookingCreateAPIView.as_view(), name="book-rooms-create"),
-    path("review/", ReviewCreateAPIView.as_view(), name="create-review"),
     path("bookings/", BookingListAPIView.as_view(), name="my-bookings"),
     path(
         "bookings/<int:booking_id>/",

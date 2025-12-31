@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
 
-from .models import UserProfile, Wishlist
+from .models import UserProfile, Wishlist, Review
+from bookings.models import Booking
 
 
 class UserProfileSerializer(ModelSerializer):
@@ -47,3 +48,26 @@ class WishlistSerializer(ModelSerializer):
         model = Wishlist
         fields = ["id", "room_type", "room_type_name", "room_type_price", "created_at"]
         read_only_fields = ["id", "created_at"]
+
+
+class ReviewCreateSerializer(ModelSerializer):
+    booking_id = serializers.IntegerField(write_only=True)
+
+    class Meta:
+        model = Review
+        fields = ["booking_id", "rating", "comment", "created_at"]
+        read_only_fields = ["created_at"]
+
+    def validate_booking_id(self, value):
+        user = self.context["request"].user
+
+        # check if the booking exists and belong to this user
+        try:
+            booking = Booking.objects.get(id=value, user=user)
+        except Booking.DoesNotExist:
+            raise serializers.ValidationError("Invalid booking ID.")
+
+        # check if booking is complete only, can't review without booking
+        if booking.status != Booking.Status.CONFIRMED:
+            raise serializers.ValidationError("You can only review completed stays.")
+        return value

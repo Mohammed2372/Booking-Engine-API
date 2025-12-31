@@ -4,8 +4,10 @@ from django.db.models.signals import post_save
 from django.conf import settings
 from django.dispatch import receiver
 from django.contrib.auth.models import User
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 from inventory.models import RoomType
+from bookings.models import Booking
 
 
 # Create your models here.
@@ -35,3 +37,18 @@ class Wishlist(Model):
 
     def __str__(self) -> str:
         return f"{self.user.username} liked {self.room_type.name}"
+
+
+class Review(Model):
+    booking = models.OneToOneField(
+        Booking, on_delete=models.CASCADE, related_name="review"
+    )
+    rating = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        help_text="Start rating 1-5",
+    )
+    comment = models.TextField(blank=True)
+    created_at = models.DateField(auto_now_add=True)
+
+    def __str__(self) -> str:
+        return f"{self.rating} stars  by {self.booking.user.username} for room {self.booking.room.number} in {self.booking.room.room_type.property.name}"

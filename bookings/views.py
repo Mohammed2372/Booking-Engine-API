@@ -15,11 +15,10 @@ from .services import (
     cancel_booking,
     create_booking,
 )
-from .models import Booking, Review
+from .models import Booking
 from .serializers import (
     BookingCreateSerializer,
     BookingDetailSerializer,
-    ReviewCreateSerializer,
 )
 from inventory.models import RoomType
 from payments.services import create_payment_intent
@@ -195,37 +194,3 @@ class BookingCancelAPIView(APIView):
             )
         except ValueError as e:
             return Response({"error": str(e)}, status=400)
-
-
-class ReviewCreateAPIView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    @extend_schema(
-        request=ReviewCreateSerializer,
-        responses={201: "Review Created"},
-        description="Submit a review for a specific booking ID.",
-    )
-    def post(self, request):
-        serializer = ReviewCreateSerializer(
-            data=request.data, context={"request": request}
-        )
-        if serializer.is_valid():
-            booking = Booking.objects.get(id=serializer.validated_data["booking_id"])
-
-            try:
-                review = Review.objects.create(
-                    booking=booking,
-                    rating=serializer.validated_data["rating"],
-                    comment=serializer.validated_data.get("comment", ""),
-                )
-                return Response(
-                    {
-                        "message": "Review submitted!",
-                        "review": ReviewCreateSerializer(review).data,
-                    },
-                    status=status.HTTP_201_CREATED,
-                )
-            except Exception as e:
-                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

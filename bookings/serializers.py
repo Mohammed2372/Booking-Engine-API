@@ -2,7 +2,7 @@ from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer, Serializer
 from datetime import date
 
-from .models import Booking, Review
+from .models import Booking
 
 
 class BookingCreateSerializer(Serializer):
@@ -50,29 +50,6 @@ class BookingDetailSerializer(ModelSerializer):
 
     def get_thumbnail(self, obj):
         return obj.room.room_type.images[0] if obj.room.room_type.images else None
-
-
-class ReviewCreateSerializer(ModelSerializer):
-    booking_id = serializers.IntegerField(write_only=True)
-
-    class Meta:
-        model = Review
-        fields = ["booking_id", "rating", "comment", "created_at"]
-        read_only_fields = ["created_at"]
-
-    def validate_booking_id(self, value):
-        user = self.context["request"].user
-
-        # check if the booking exists and belong to this user
-        try:
-            booking = Booking.objects.get(id=value, user=user)
-        except Booking.DoesNotExist:
-            raise serializers.ValidationError("Invalid booking ID.")
-
-        # check if booking is complete only, can't review without booking
-        if booking.status != Booking.Status.CONFIRMED:
-            raise serializers.ValidationError("You can only review completed stays.")
-        return value
 
 
 class CheckoutSerializer(serializers.Serializer):

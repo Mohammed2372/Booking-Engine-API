@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.utils.safestring import SafeText
 
-from .models import Booking, Review
+from .models import Booking
 
 
 # Register your models here.
@@ -80,9 +80,3 @@ class BookingAdmin(admin.ModelAdmin):
         return response
 
     export_to_csv.short_description = "Export selected to CSV"
-
-
-@admin.register(Review)
-class ReviewAdmin(admin.ModelAdmin):
-    list_display = ["id", "booking__user", "booking", "rating", "comment", "created_at"]
-    list_filter = ["created_at", "rating"]

@@ -4,7 +4,6 @@ from django.conf import settings
 from django.contrib.postgres.constraints import ExclusionConstraint
 from django.contrib.postgres.fields import RangeOperators, DateRangeField
 from django.utils.translation import gettext_lazy as _
-from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 from inventory.models import Room
@@ -59,16 +58,3 @@ class Booking(Model):
         return f"Booking number ({self.id}) for {self.room}"
 
 
-class Review(Model):
-    booking = models.OneToOneField(
-        "Booking", on_delete=models.CASCADE, related_name="review"
-    )
-    rating = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(5)],
-        help_text="Start rating 1-5",
-    )
-    comment = models.TextField(blank=True)
-    created_at = models.DateField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.rating} stars  by {self.booking.user.username} for room {self.booking.room.number} in {self.booking.room.room_type.property.name}"
