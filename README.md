@@ -16,8 +16,6 @@ A robust, production-ready REST API for a hotel booking system. Features dynamic
 - [Testing Guide](#-testing-guide)
 - [API Documentation](#-api-documentation)
 - [Project Structure](#-project-structure)
-- [Contributing](#-contributing)
-- [License](#-license)
 
 ---
 
@@ -473,7 +471,7 @@ Once the server is running, visit:
 
 ---
 
-## 📁 Project Structure (actual)
+## 📁 Project Structure
 
 Below is the real file/folder layout discovered in this repository root.
 
